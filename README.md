@@ -12,6 +12,10 @@ Linux commands working with certificates
 ## Sign sub CA certificate with AD CS (save it in .cer)
 ```certreq -submit -attrib "CertificateTemplate:SubCA" pki_intermediate.csr```
 
+## Get certificate with openssl
+```openssl s_client -showcerts -servername www.example.com -connect www.example.com:443 </dev/null```
+
+
 # Checking 
 ## Check certificate
 ```openssl x509 -in certificate.crt -text -noout```
