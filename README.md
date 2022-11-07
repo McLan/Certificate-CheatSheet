@@ -6,7 +6,8 @@ Linux commands working with certificates
 * /usr/local/share/ca-certificates/ (debian) 
 * /etc/pki/ca-trust/source/anchors/ (redhat)
 
-2. Run sudo update-ca-certificate
+2. Run 
+```sudo update-ca-certificate```
 
 ## Sign sub CA certificate with AD CS (save it in .cer)
 ```certreq -submit -attrib "CertificateTemplate:SubCA" pki_intermediate.csr```
