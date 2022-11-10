@@ -1,0 +1,58 @@
+//vault read auth/approle/role/node-role/role-id
+//vault write -f auth/approle/role/node-role/secret-id
+
+const request = require('request-promise');
+const fs = require('fs');
+
+//Get roleID and secretID env variables 
+const roleId = process.env.ROLE_ID;
+const secretId = process.env.SECRET_ID;
+var loginurl = 'https://192.168.56.1:8200/v1/auth/approle/login';
+var url = 'https://192.168.56.1:8200/v1/pki_int/issue/lanard-dot-com';
+
+async function getCertificate() {
+    body = "";
+    //Authenticate with Approle and get token
+    try {
+        body = await request({
+            url: loginurl,
+            method: "POST",
+            form: { 'role_id': roleId, 'secret_id': secretId }
+        });
+    } catch (error) {
+        console.log(error);
+    }
+    var result = JSON.parse(body);
+    var token = result.auth.client_token;
+
+    //Request certificate from Vault
+    body2 = "";
+    try {
+        var headers = { 'X-Vault-Token': token };
+        body2 = await request({
+            headers: headers,
+            url: url,
+            method: "POST",
+            form: {
+                "common_name": "test.lanard.local",
+                "ip_sans": "192.168.56.1"
+                //"ttl": "1h"
+                //"uri_sans": ""
+            }
+        })
+    } catch (error) {
+        console.log(error);
+    }
+    result = JSON.parse(body2);
+
+    //Write cert and private key in the /certs/ folder 
+    cert = result.data.certificate + "\n" + result.data.issuing_ca
+    fs.writeFile('certs/cert.pem', cert, err => {
+        if (err) { console.error(err); }
+    });
+    fs.writeFile('certs/key.pem', result.data.private_key, err => {
+        if (err) { console.error(err); }
+    });
+}
+
+getCertificate();
